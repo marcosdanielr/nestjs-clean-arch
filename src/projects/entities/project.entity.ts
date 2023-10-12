@@ -47,5 +47,26 @@ export class Project {
   ) {
     Object.assign(this, props);
     this.id = id ?? crypto.randomUUID();
+
+    if (props?.started_at) {
+      this.start(props.started_at);
+    }
+  }
+
+  start(started_at: Date) {
+    if (this.status === ProjectStatus.ACTIVE) {
+      throw new Error('Cannot start activated project');
+    }
+
+    if (this.status === ProjectStatus.COMPLETED) {
+      throw new Error('Cannot start completed project');
+    }
+
+    if (this.status === ProjectStatus.CANCELLED) {
+      throw new Error('Cannot start canceled project');
+    }
+
+    this.started_at = started_at;
+    this.status = ProjectStatus.ACTIVE;
   }
 }

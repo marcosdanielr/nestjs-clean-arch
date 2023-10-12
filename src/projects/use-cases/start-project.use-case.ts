@@ -1,30 +1,19 @@
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Inject } from '@nestjs/common';
 import { StartProjectDto } from '../dto/start-project.dto';
-import { Project, ProjectStatus } from '../entities/project.entity';
+import { IProjectRepository } from '../project.repository';
 
 export class StartProjectUseCase {
   constructor(
-    @InjectRepository(Project)
-    private readonly projectRepo: Repository<Project>,
+    @Inject('IProjectRepository')
+    private readonly projectRepo: IProjectRepository,
   ) {}
 
   async execute(id: string, input: StartProjectDto) {
-    const project = await this.projectRepo.findOneByOrFail({ id });
+    const project = await this.projectRepo.findById(id);
+    project.start(input.started_at);
 
-    if (project.status === ProjectStatus.ACTIVE) {
-      throw new Error('Cannot start activated project');
-    }
+    await this.projectRepo.update(project);
 
-    if (project.status === ProjectStatus.COMPLETED) {
-      throw new Error('Cannot start completed project');
-    }
-
-    if (project.status === ProjectStatus.CANCELLED) {
-      throw new Error('Cannot start canceled project');
-    }
-
-    project.started_at = input.started_at;
-    project.status = ProjectStatus.ACTIVE;
+    return project;
   }
 }
